@@ -13,10 +13,10 @@ struct Flight {
 };
 
 struct Edge {
-  int to, cap, flow;
+	int to, cap, flow;
 
-  Edge(int to, int cap, int flow) :
-    to(to), cap(cap), flow(flow) {}
+	Edge(int to, int cap, int flow) :
+		to(to), cap(cap), flow(flow) {}
 };
 
 // *** Global variables ***
