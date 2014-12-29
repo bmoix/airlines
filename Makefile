@@ -1,5 +1,5 @@
-BIN = main
-SRC = main.cc
+BIN = airlines
+SRC = airlines.cc
 OBJ = ${SRC:.cc=.o}
 
 CC = g++
