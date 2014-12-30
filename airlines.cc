@@ -20,6 +20,8 @@ struct Edge {
 		to(to), cap(cap), flow(flow) {}
 };
 
+typedef vector<int> VI;
+typedef vector<VI> MI;
 typedef vector<vector<Edge>> Graph;
 typedef vector< vector <pair<int,int> > > IImat;		// Següent node, capacitat aresta.
 typedef vector< pair<int,int> > IIvec;					// Següent node, capacitat aresta.
@@ -106,6 +108,101 @@ void updateK(Graph& g, int k) {
 	g[t][0].cap = k;
 	g[s][0].cap = k;
 }
+
+// -----------------------------------
+
+void buildResidual(const Graph & g, Graph & r) {
+	for (int i = 0; i < (int)g.size(); i++) {
+		for (int j = 0; j < (int)g[i].size(); j++) {
+			r[i].push_back((Edge(g[i][j].to,-1,g[i][j].cap)));
+		}
+	}
+}
+
+int findPath(const Graph& r, VI& path) {
+	int bottleneck = 0;
+	path = VI(r.size(),-1);
+	VI cap(r.size(),0);
+	queue<int> vertexs;
+	vertexs.push(S);
+	cap[S] = 10000;
+	path[S] = -2;
+	while (not vertexs.empty()) {
+		int vIni = vertexs.front();
+		vertexs.pop();
+		for (auto e : r[vIni]) {
+			int vAct = e.to;
+			int capTot = e.flow;
+			int capR = capTot - cap[vAct];
+			if (capR > 0 and path[vAct] == -1) {
+				path[vAct] = vIni;
+				cap[vAct] = min(cap[vIni],capR);
+				if (vAct == T) return cap[T];
+				vertexs.push(vAct);
+			}
+		}
+	}
+	return bottleneck;
+}
+
+int findPosition(Graph& r, int ini, int end) {
+	for (int i = 0; i < (int)r[ini].size(); i++) {
+		if (r[ini][i].to == end) return i;
+	}
+	r[ini].push_back(Edge(end,-1,0));
+	return r[ini].size()-1;
+}
+
+void augment(Graph& r, const VI& path, int bottleneck) {
+	int vAct = T;
+	while (vAct != S) {
+		int vIni = path[vAct];
+		// augment part
+		int p1 = findPosition(r,vIni,vAct);
+		r[vIni][p1].flow -= bottleneck;
+		int p2 = findPosition(r,vAct,vIni);
+		r[vIni][p2].flow -= bottleneck;
+		// update part
+		/*
+		for (auto e : g[vIni]) {
+			if (e.to == vAct) {
+				e.flow += bottleneck;
+				break;
+			}
+		}
+		*/
+		vAct = path[vAct];
+	}
+}
+
+void updateGraph(Graph& g, const VI& path, int bottleneck) {
+	int vAct = T;
+	while (vAct != S) {
+		int vIni = path[vAct];
+		for (auto e : g[vIni]) {
+			if (e.to == vAct) {
+				e.flow += bottleneck;
+				break;
+			}
+		}
+		vAct = path[vAct];
+	}
+}
+
+int maxFlow(Graph & g) {
+	Graph r(g.size());
+	buildResidual(g,r);
+	VI path;
+	int bottleneck, maxflow=0;
+	while((bottleneck = findPath(r,path)) > 0) {
+		augment(r,path,bottleneck);
+		updateGraph(g,path,bottleneck);
+		maxflow += bottleneck;
+	}
+	return maxflow;
+}
+
+// -----------------------------------
 
 // Funció que crea el graf residual inicial associat a un graf.
 IImat graf_to_grafRes(const Graph & graf) {
@@ -245,7 +342,10 @@ int main(int argc, char *argv[]) {
 	printGraph(g);
 
 	Graph g1 = g;
-	int maxflow = max_flow(g1);
+	// old
+	//int maxflow = max_flow(g1);
+	// new
+	int maxflow = maxFlow(g1);
 	cout << endl << "Final graph with value " << maxflow << ":" << endl;
 	printGraph(g1);
 	return 0;
