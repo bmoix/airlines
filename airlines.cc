@@ -125,7 +125,7 @@ int findPath(const Graph& r, VI& path) {
 	VI cap(r.size(),0);
 	queue<int> vertexs;
 	vertexs.push(S);
-	cap[S] = 10000;
+	cap[S] = 10000;			// Partial solution, is important to fix it.
 	path[S] = -2;
 	while (not vertexs.empty()) {
 		int vIni = vertexs.front();
@@ -178,12 +178,9 @@ void updateGraph(Graph& g, const VI& path, int bottleneck) {
 	int vAct = T;
 	while (vAct != S) {
 		int vIni = path[vAct];
-		for (auto e : g[vIni]) {
-			if (e.to == vAct) {
-				e.flow += bottleneck;
-				break;
-			}
-		}
+		int i = -1;
+		while(g[vIni][++i].to != vAct);		//Busca la posició del vèrtex en la llista d'adjacències.
+		g[vIni][i].flow += bottleneck;
 		vAct = path[vAct];
 	}
 }
