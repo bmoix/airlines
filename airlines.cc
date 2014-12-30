@@ -132,8 +132,7 @@ int findPath(const Graph& r, VI& path) {
 		vertexs.pop();
 		for (auto e : r[vIni]) {
 			int vAct = e.to;
-			int capTot = e.flow;
-			int capR = capTot - cap[vAct];
+			int capR = e.flow;
 			if (capR > 0 and path[vAct] == -1) {
 				path[vAct] = vIni;
 				cap[vAct] = min(cap[vIni],capR);
@@ -158,9 +157,9 @@ void augment(Graph& r, const VI& path, int bottleneck) {
 	while (vAct != S) {
 		int vIni = path[vAct];
 		// augment part
-		int p1 = findPosition(r,vIni,vAct);
-		r[vIni][p1].flow -= bottleneck;
-		int p2 = findPosition(r,vAct,vIni);
+		int p1 = findPosition(r,vAct,vIni);
+		r[vAct][p1].flow += bottleneck;
+		int p2 = findPosition(r,vIni,vAct);
 		r[vIni][p2].flow -= bottleneck;
 		// update part
 		/*
