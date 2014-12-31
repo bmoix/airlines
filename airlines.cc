@@ -350,26 +350,25 @@ int main(int argc, char *argv[]) {
 	readFlights(flights,airports,X);
 
 	// number of pilots to serve all flights
-	int k = 2;
+	int k=0;
 	// Graph that represents the network flow
 	Graph g(flights.size()*2+4);
 	buildGraph(g,flights,airports,k,X);
-	printGraph(g);
-
-	Graph g1 = g;
-	// old
-	//int maxflow = max_flow(g1);
-	// new
-	int maxflow = maxFlow(g1);
-	cout << endl << "Final graph with value " << maxflow << ":" << endl;
-	printGraph(g1);
 	
-	/*Per provar part maxFlow sola
-	Graph g1;
-	llegir_entrada(g1);
-	int maxflow = maxFlow(g1);
-	cout << endl << "Final graph with value " << maxflow << ":" << endl;
-	printGraph(g1);*/
+	// Binary search to find the minimum k
+	int l = 0, r = flights.size();
+	while (l <= r) {
+		int m = (l+r)/2;
+		updateK(g,m);
+		Graph g1 = g;
+		int flow = maxFlow(g1);
+		if (flow < m + flights.size()) l = m + 1;
+		else {
+			k = m;
+			r = m - 1;
+		}
+	}
+	cout << "k " << k << endl;
 
 	return 0;
 }
