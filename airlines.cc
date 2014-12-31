@@ -44,7 +44,7 @@ void parseArgs(int argc, char *argv[], int& N, int& X) {
 	if (arg2 == "1") X = 1;
 }
 
-void readFlights(vector<Flight>& flights, vector<vector<int>>& airports, int& X) {
+void readFlights(vector<Flight>& flights, MI& airports, int& X) {
 	int o, d, h1, h2, i=0;
 	while (cin >> o >> d >> h1 >> h2) {
 		flights.push_back(Flight(o,d,h1,h2));
@@ -54,7 +54,7 @@ void readFlights(vector<Flight>& flights, vector<vector<int>>& airports, int& X)
 	
 }
 
-void buildGraph(Graph& g, vector<Flight>& flights, vector<vector<int>>& airports, int k, int X) {
+void buildGraph(Graph& g, vector<Flight>& flights, MI& airports, int k, int X) {
 	g[S].push_back(Edge(s,k,0));
 	g[t].push_back(Edge(T,k,0));
 	//g[s].push_back(Edge(t,k,0));
