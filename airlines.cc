@@ -57,7 +57,7 @@ void readFlights(vector<Flight>& flights, vector<vector<int>>& airports, int& X)
 void buildGraph(Graph& g, vector<Flight>& flights, vector<vector<int>>& airports, int k, int X) {
 	g[S].push_back(Edge(s,k,0));
 	g[t].push_back(Edge(T,k,0));
-	g[s].push_back(Edge(t,k,0));
+	//g[s].push_back(Edge(t,k,0));
 	int i = 4;
 	for (Flight f : flights) {
 		g[i].push_back(Edge(i+1,X-1,0));
