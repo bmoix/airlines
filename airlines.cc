@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <queue>
+#include <stack>
 
 using namespace std;
 
@@ -57,7 +58,7 @@ void readFlights(vector<Flight>& flights, MI& airports, int& X) {
 void buildGraph(Graph& g, vector<Flight>& flights, MI& airports, int k, int X) {
 	g[S].push_back(Edge(s,k,0));
 	g[t].push_back(Edge(T,k,0));
-	//g[s].push_back(Edge(t,k,0));
+	g[s].push_back(Edge(t,k,0));
 	int i = 4;
 	for (Flight f : flights) {
 		g[i].push_back(Edge(i+1,X-1,0));
@@ -111,74 +112,108 @@ void updateK(Graph& g, int k) {
 
 // -----------------------------------
 
-int findPath(const Graph& g, MI& F, VI& path) {
+void llegir_entrada(Graph &graf) {
+	int numVer;						// Número de vertex que té el graf
+	cin >> numVer;
+	graf = Graph (numVer);			// Llista d'adjacencia que representa el graf
+
+	int ver1, ver2, capacitat;
+	while (cin >> ver1 >> ver2 >> capacitat) {
+		graf[ver1].push_back(Edge(ver2,capacitat,0));
+	}
+}
+
+void escriure_cami(const VI & cami) {
+	stack<int> aux;
+	int ini = T;
+	while (ini != S) {
+		aux.push(ini);
+		ini = cami[ini];
+	}
+	aux.push(S);
+	while (not aux.empty()) {
+		cout << aux.top() << " ";
+		aux.pop();
+	}
+	cout << endl;
+}
+
+void buildResidual(const Graph & g, Graph & r) {
+	for (int i = 0; i < (int)g.size(); i++) {
+		for (int j = 0; j < (int)g[i].size(); j++) {
+			r[i].push_back((Edge(g[i][j].to,g[i][j].cap, g[i][j].cap)));
+		}
+	}
+}
+
+void residualToGraph(const Graph & r, Graph & g) {
+	for (int i = 0; i < (int) r.size(); i++) {
+		for (int j = 0; j < (int) r[i].size(); j++) {
+			if (r[i][j].cap != -1) g[i].push_back((Edge(r[i][j].to,r[i][j].cap, r[i][j].cap - r[i][j].flow)));
+		}
+	}
+}
+
+int findPath(const Graph& r, VI& path) {
 	int bottleneck = 0;
-	path = VI(g.size(),-1);
-	VI M(g.size(),0);
-	queue<int> q;
-	q.push(S);
-	M[S] = 10000;			// Partial solution, is important to fix it.
+	path = VI(r.size(),-1);
+	VI cap(r.size(),0);
+	queue<int> vertexs;
+	vertexs.push(S);
+	cap[S] = 10000;			// Partial solution, is important to fix it.
 	path[S] = -2;
-	while (not q.empty()) {
-		int vIni = q.front();
-		q.pop();
-		for (auto e : g[vIni]) {
+	while (not vertexs.empty()) {
+		int vIni = vertexs.front();
+		vertexs.pop();
+		for (auto e : r[vIni]) {
 			int vAct = e.to;
-			int capR = e.cap - F[vIni][vAct];
+			int capR = e.flow;
 			if (capR > 0 and path[vAct] == -1) {
 				path[vAct] = vIni;
-				M[vAct] = min(M[vIni],capR);
-				if (vAct == T) return M[T];
-				q.push(vAct);
+				cap[vAct] = min(cap[vIni],capR);
+				if (vAct == T) return cap[T];
+				vertexs.push(vAct);
 			}
 		}
 	}
 	return bottleneck;
 }
 
-void augment(MI& F, const VI& path, int bottleneck) {
+int findPosition(Graph& r, int ini, int end) {
+	for (int i = 0; i < (int)r[ini].size(); i++) {
+		if (r[ini][i].to == end) return i;
+	}
+	// The searched edge doesn't exist, now we create it.
+	r[ini].push_back(Edge(end,-1,0));
+	return r[ini].size()-1;
+}
+
+void augment(Graph& r, const VI& path, int bottleneck) {
 	int vAct = T;
 	while (vAct != S) {
 		int vIni = path[vAct];
 		// augment part
-		F[vIni][vAct] += bottleneck;
-		F[vAct][vIni] -= bottleneck;
-		// update part
-		/*
-		for (auto e : g[vIni]) {
-			if (e.to == vAct) {
-				e.flow += bottleneck;
-				break;
-			}
-		}
-		*/
-		vAct = vIni;
-	}
-}
+		int p1 = findPosition(r,vAct,vIni);
+		r[vAct][p1].flow += bottleneck;
+		int p2 = findPosition(r,vIni,vAct);
+		r[vIni][p2].flow -= bottleneck;
 
-void updateGraph(Graph& g, const VI& path, int bottleneck) {
-	int vAct = T;
-	while (vAct != S) {
-		int vIni = path[vAct];
-		int i = -1;
-		while(g[vIni][++i].to != vAct);		//Busca la posició del vèrtex en la llista d'adjacències.
-		g[vIni][i].flow += bottleneck;
 		vAct = path[vAct];
 	}
 }
 
 int maxFlow(Graph & g) {
-	int n = g.size();
-	MI F(n, VI (n, 0));
-	//Graph r(g.size());
-	//buildResidual(g,r);
+	Graph r(g.size());
+	buildResidual(g,r);
 	VI path;
 	int bottleneck, maxflow=0;
-	while((bottleneck = findPath(g,F,path)) > 0) {
-		augment(F,path,bottleneck);
-		updateGraph(g,path,bottleneck);
+	while((bottleneck = findPath(r,path)) > 0) {
+		augment(r,path,bottleneck);
 		maxflow += bottleneck;
 	}
+	Graph g1(g.size());
+	residualToGraph(r, g1);
+	g = g1;
 	return maxflow;
 }
 
@@ -328,5 +363,13 @@ int main(int argc, char *argv[]) {
 	int maxflow = maxFlow(g1);
 	cout << endl << "Final graph with value " << maxflow << ":" << endl;
 	printGraph(g1);
+	
+	/*Per provar part maxFlow sola
+	Graph g1;
+	llegir_entrada(g1);
+	int maxflow = maxFlow(g1);
+	cout << endl << "Final graph with value " << maxflow << ":" << endl;
+	printGraph(g1);*/
+
 	return 0;
 }
