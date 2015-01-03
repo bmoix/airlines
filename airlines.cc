@@ -111,7 +111,7 @@ void updateK(Graph& g, int k) {
 }
 
 // -----------------------------------
-
+// *** MaxFlow testing utilities ***
 void llegir_entrada(Graph &graf) {
 	int numVer;						// Número de vertex que té el graf
 	cin >> numVer;
@@ -138,6 +138,7 @@ void escriure_cami(const VI & cami) {
 	cout << endl;
 }
 
+// *** MaxFlow general functions ***
 void buildResidual(const Graph & g, Graph & r) {
 	for (int i = 0; i < (int)g.size(); i++) {
 		for (int j = 0; j < (int)g[i].size(); j++) {
@@ -152,31 +153,6 @@ void residualToGraph(const Graph & r, Graph & g) {
 			if (r[i][j].cap != -1) g[i].push_back((Edge(r[i][j].to,r[i][j].cap, r[i][j].cap - r[i][j].flow)));
 		}
 	}
-}
-
-int findPath(const Graph& r, VI& path) {
-	int bottleneck = 0;
-	path = VI(r.size(),-1);
-	VI cap(r.size(),0);
-	queue<int> vertexs;
-	vertexs.push(S);
-	cap[S] = 10000;			// Partial solution, is important to fix it.
-	path[S] = -2;
-	while (not vertexs.empty()) {
-		int vIni = vertexs.front();
-		vertexs.pop();
-		for (auto e : r[vIni]) {
-			int vAct = e.to;
-			int capR = e.flow;
-			if (capR > 0 and path[vAct] == -1) {
-				path[vAct] = vIni;
-				cap[vAct] = min(cap[vIni],capR);
-				if (vAct == T) return cap[T];
-				vertexs.push(vAct);
-			}
-		}
-	}
-	return bottleneck;
 }
 
 int findPosition(Graph& r, int ini, int end) {
@@ -202,7 +178,34 @@ void augment(Graph& r, const VI& path, int bottleneck) {
 	}
 }
 
-int maxFlow(Graph & g) {
+// *** Edmonds-Karp MaxFlow algorithm functions ***
+
+int findPath(const Graph& r, VI& path) {
+	int bottleneck = 0;
+	path = VI(r.size(),-1);
+	VI cap(r.size(),0);
+	queue<int> vertexs;
+	vertexs.push(S);
+	cap[S] = 5000000;			// Partial solution, is important to fix it.
+	path[S] = -2;
+	while (not vertexs.empty()) {
+		int vIni = vertexs.front();
+		vertexs.pop();
+		for (auto e : r[vIni]) {
+			int vAct = e.to;
+			int capR = e.flow;
+			if (capR > 0 and path[vAct] == -1) {
+				path[vAct] = vIni;
+				cap[vAct] = min(cap[vIni],capR);
+				if (vAct == T) return cap[T];
+				vertexs.push(vAct);
+			}
+		}
+	}
+	return bottleneck;
+}
+
+int edmondsKarp(Graph & g) {
 	Graph r(g.size());
 	buildResidual(g,r);
 	VI path;
@@ -216,6 +219,134 @@ int maxFlow(Graph & g) {
 	g = g1;
 	return maxflow;
 }
+
+// *** Dinic MaxFlow algorithm functions ***
+
+void delEdge(Graph& g, int vAct, int vSeg) {
+	int i = -1;
+	while (++i < (int) g[vAct].size() and g[vAct][i].to != vSeg);
+	if (g[vAct][i].to == vSeg) g[vAct].erase(g[vAct].begin() + i);
+}
+
+void delPre(MI & pre, int vAct, int vSeg) {
+	int i = -1;
+	while(++i < (int) pre[vSeg].size() and pre[vSeg][i] != vAct);
+	if(pre[vSeg][++i] == vAct) pre[vSeg].erase(pre[vSeg].begin() + i);
+}
+
+void delInvalid(Graph& g, MI& pre, int vAct, int vSeg) {
+	delEdge(g, vAct, vSeg);
+	delPre(pre, vAct, vSeg);
+	if ((int) g[vAct].size() == 0 and vAct != T) {
+		for(int vAnt : pre[vAct]) {
+			delInvalid(g, pre, vAnt, vAct);
+		}
+	}
+
+}
+
+int dinicBfs(Graph& g) {
+	VI dis(g.size(),-1);
+	dis[S] = 0;
+	MI pre(g.size());
+	queue<int> q;
+	q.push(S);
+	while (not q.empty()) {
+		int vIni = q.front();
+		q.pop();
+		VI del;
+		// cout << "De " << vIni << " a ";
+		for (int i = (int) g[vIni].size()-1; i >= 0; i--) {
+			Edge e = g[vIni][i];
+			int vAct = e.to;
+			// cout << vAct << " ";
+			if (dis[vAct] == -1) {
+				dis[vAct] = dis[vIni] + 1;
+				pre[vAct].push_back(vIni);
+				q.push(vAct);
+			} else if (dis[vAct] == dis[vIni] + 1) {
+				pre[vAct].push_back(vIni);
+			} else {
+				g[vIni].erase(g[vIni].begin() + i);
+			}
+		}
+		if (g[vIni].empty() and vIni != T) for (int vAnt : pre[vIni]) delInvalid(g, pre, vAnt, vIni);
+	}
+	return dis[T];
+}
+
+bool dinicDfs(Graph& g, VI& path, VI& bott, int v) {
+	bool trobat = false;
+	if (v == T) trobat = true;
+	else {
+		int i = 0;
+		while (i < (int) g[v].size() and not trobat) {
+			Edge e = g[v][i];
+			int u = e.to;
+			if (path[u] == -1) {
+				path[u] = v;
+				bott[u] = min(e.flow, bott[v]);
+				trobat = dinicDfs(g, path,bott, u);
+			}
+			i++;
+		}
+	}
+	return trobat;
+}
+
+void copyGraph(const Graph& g, Graph& aux) {
+	for (int i = 0; i < (int) g.size();i++) {
+		for (int j = 0; j < (int) g[i].size(); j++) {
+			Edge e = g[i][j];
+			if (e.flow != 0) aux[i].push_back(Edge(e.to, e.cap, e.flow));
+		}
+	}
+}
+
+void removeEdges(Graph& g, const VI& path) {
+	int vAct = T;
+	while (vAct != S) {
+		int vIni = path[vAct];
+		// augment part
+		int i = -1;
+		while (g[vIni][++i].to != vAct);
+		if (g[vIni][i].flow == 0) g[vIni].erase(g[vIni].begin() + i);
+
+		vAct = vIni;
+	}
+}
+
+int dinic(Graph & g) {
+	Graph r(g.size());
+	buildResidual(g,r);
+	Graph aux = r;
+	int maxflow=0;
+	while(dinicBfs(aux) > 0) {
+		VI path(aux.size(), -1);
+		path[S] = -2;
+		VI bott(aux.size(), 0);
+		bott[S] = 5000000;
+		while (dinicDfs(aux, path, bott, S)){
+			augment(aux,path,bott[T]);
+			removeEdges(aux, path);
+			augment(r,path,bott[T]);
+			maxflow += bott[T];
+
+			path = VI(r.size(), -1);
+			path[S] = -2;
+			bott = VI(r.size(), 0);
+			bott[S] = 5000000; 
+		}
+		aux = Graph(g.size());
+		copyGraph(r, aux);	
+	}
+	Graph g1(g.size());
+	residualToGraph(r, g1);
+	g = g1;
+	return maxflow;
+}
+
+// *** Main ***
 
 int main(int argc, char *argv[]) {
 	// X defines the capacity of the edges in the different versions
@@ -242,8 +373,8 @@ int main(int argc, char *argv[]) {
 		int m = (l+r)/2;
 		updateK(g,m);
 		Graph g1 = g;
-		int flow = maxFlow(g1);
-		if (flow < m + flights.size()) l = m + 1;
+		int flow = dinic(g1);
+		if (flow < m + (int) flights.size()) l = m + 1;
 		else {
 			k = m;
 			r = m - 1;
