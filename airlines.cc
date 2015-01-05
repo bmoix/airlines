@@ -3,6 +3,11 @@
 #include <queue>
 #include <stack>
 
+#include <string>
+#include <sstream>
+#include <fstream>
+//#include <chrono>
+
 using namespace std;
 
 // *** Data structures ***
@@ -34,25 +39,29 @@ const int s=2, t=3, S=0, T=1;
 
 // *** Graph building ***
 
-void parseArgs(int argc, char *argv[], int& N, int& X) {
-	if (argc != 3) {
-		cout << "Usage: airlines <airports> <version>" << endl;
+void parseArgs(int argc, char *argv[], int& N, int& X, int& A) {
+	if (argc != 4) {
+		cout << "Usage: airlines <airports> <version> <algorithm>" << endl;
 		exit(1);
 	}
 	std::string arg1 = argv[1];
 	std::string arg2 = argv[2];
+	std::string arg3 = argv[3];
 	N = atoi(arg1.c_str());
+	A = atoi(arg3.c_str());
 	if (arg2 == "1") X = 1;
 }
 
-void readFlights(vector<Flight>& flights, MI& airports, int& X) {
+void readFlights(string s, vector<Flight>& flights, MI& airports, int& X) {
+	ifstream myfile;
+	myfile.open(s.c_str());
 	int o, d, h1, h2, i=0;
-	while (cin >> o >> d >> h1 >> h2) {
+	while (myfile >> o >> d >> h1 >> h2) {
 		flights.push_back(Flight(o,d,h1,h2));
 		airports[o].push_back(i++);
 	}
 	if (X == -1) X = flights.size();
-	
+	myfile.close();
 }
 
 void buildGraph(Graph& g, vector<Flight>& flights, MI& airports, int k, int X) {
@@ -348,18 +357,14 @@ int dinic(Graph & g) {
 
 // *** Main ***
 
-int main(int argc, char *argv[]) {
-	// X defines the capacity of the edges in the different versions
-	int X = -1;
-	// Number of airports
-	int N;
-	parseArgs(argc,argv,N,X);
+int solve(string file, int N, int X, int A) {
+	string s = "./Benchmark/" + file;
 
 	// All the flights with it's info
 	vector<Flight> flights;
 	// Flights of each airport
 	vector<vector<int>> airports(N);
-	readFlights(flights,airports,X);
+	readFlights(s,flights,airports,X);
 
 	// number of pilots to serve all flights
 	int k=0;
@@ -373,14 +378,64 @@ int main(int argc, char *argv[]) {
 		int m = (l+r)/2;
 		updateK(g,m);
 		Graph g1 = g;
-		int flow = dinic(g1);
+		int flow = 0;
+		if (A == 1) flow = edmondsKarp(g1);
+		else if (A == 2) flow = dinic(g1);
 		if (flow < m + (int) flights.size()) l = m + 1;
 		else {
 			k = m;
 			r = m - 1;
 		}
 	}
-	cout << "k " << k << endl;
+	return k;
+}
+
+void instances(int N, int X, int A) {
+		string s;
+		while (cin >> N >> s) {
+			int k = solve(s,N,X,A);
+			cout << s << " " << k << endl;
+		}
+
+}
+
+void times(int N, int X, int A) {
+	for (int i = 2; i <= 30; i++) {
+		N = i;
+		ostringstream convert;
+		convert << i;
+		string s = "instance_100_" + convert.str() + "_";
+
+		auto t = 0;
+		for (int j = 1; j <= 10; j++) {
+			ostringstream convert2;
+			convert2 << j;
+			string s2 = s + convert2.str() + ".air";
+			for (int x = 0; x < 10; x++) {
+				//high_resolution_clock::time_point t1 = high_resolution_clock::now();
+				int k = solve(s2,N,X,A);
+				//high_resolution_clock::time_point t2 = high_resolution_clock::now();
+				//auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+				//t += duration;
+			}
+			//cout << s2 << " " << k << endl;
+		}
+		t /= 100;
+		cout << "N = " << N << " t = " << t << " ms" << endl;
+	}
+}
+
+int main(int argc, char *argv[]) {
+	// X defines the capacity of the edges in the different versions
+	int X = -1;
+	// Number of airports
+	int N;
+	// Algorithm to be used
+	int A;
+	parseArgs(argc,argv,N,X,A);
+
+	//instances(N,X,A);
+	times(N,X,A);
 
 	return 0;
 }
