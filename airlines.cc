@@ -6,7 +6,7 @@
 #include <string>
 #include <sstream>
 #include <fstream>
-//#include <chrono>
+#include <chrono>
 
 using namespace std;
 
@@ -412,16 +412,16 @@ void times(int N, int X, int A) {
 			convert2 << j;
 			string s2 = s + convert2.str() + ".air";
 			for (int x = 0; x < 10; x++) {
-				//high_resolution_clock::time_point t1 = high_resolution_clock::now();
-				int k = solve(s2,N,X,A);
-				//high_resolution_clock::time_point t2 = high_resolution_clock::now();
-				//auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
-				//t += duration;
+				std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+				solve(s2,N,X,A);
+				std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+				auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+				t += duration;
 			}
 			//cout << s2 << " " << k << endl;
 		}
-		t /= 100;
-		cout << "N = " << N << " t = " << t << " ms" << endl;
+		t /= 10;
+		cout << "N = " << N << " t = " << t << " microseconds" << endl;
 	}
 }
 
