@@ -76,17 +76,20 @@ void readFlightsFile(string s, vector<Flight>& flights, MI& airports, int& X) {
 void buildGraph(Graph& g, vector<Flight>& flights, MI& airports, int k, int X) {
 	g[S].push_back(Edge(s,k,0));
 	g[t].push_back(Edge(T,k,0));
-	//g[s].push_back(Edge(t,k,0));
 	int i = 4;
 	for (Flight f : flights) {
-		g[i].push_back(Edge(i+1,X-1,0));
 		g[i].push_back(Edge(T,1,0));
-		g[s].push_back(Edge(i,X,0));
 		g[i+1].push_back(Edge(t,1,0));
 		g[S].push_back(Edge(i+1,1,0));
+		for (int j = 0; j < X; j++) {
+			if (j) g[i].push_back(Edge(i+1,1,0));
+			g[s].push_back(Edge(i,1,0));
+		}
 		for (auto a : airports[f.dest]) {
 			if (flights[a].dept - f.arr >= 15) {
-				g[i+1].push_back(Edge(4+2*a,X,0));
+				for (int j = 0; j < X; j++) {
+					g[i+1].push_back(Edge(4+2*a,1,0));
+				}
 			}
 		}
 		i += 2;
@@ -120,12 +123,6 @@ void printGraph(Graph& g) {
 			cout << "\tTo " << x.to << " c " << x.cap << " f " << x.flow << endl;
 		}
 	}
-}
-
-void updateK(Graph& g, int k) {
-	g[S][0].cap = k;
-	g[t][0].cap = k;
-	g[s][0].cap = k;
 }
 
 // -----------------------------------
@@ -405,23 +402,24 @@ void solve(int N, int X, int A) {
 
 	// number of pilots to serve all flights
 	int k=0;
-	// Graph that represents the network flow
-	Graph g(flights.size()*2+4);
-	buildGraph(g,flights,airports,k,X);
+	
 	Graph ans;
 	// Binary search to find the minimum k
 	int l = 0, r = flights.size();
 	while (l <= r) {
 		int m = (l+r)/2;
-		updateK(g,m);
-		Graph g1 = g;
+
+		// Graph that represents the network flow
+		Graph g(flights.size()*2+4);
+		buildGraph(g,flights,airports,m,X);
+
 		int flow = 0;
-		if (A == 1) flow = edmondsKarp(g1);
-		else if (A == 2) flow = dinic(g1);
+		if (A == 1) flow = edmondsKarp(g);
+		else if (A == 2) flow = dinic(g);
 		if (flow < m + (int) flights.size()) l = m + 1;
 		else {
 			k = m;
-			ans = g1;
+			ans = g;
 			r = m - 1;
 		}
 	}
@@ -448,11 +446,12 @@ int solveFile(string file, int N, int X, int A) {
 	int l = 0, r = flights.size();
 	while (l <= r) {
 		int m = (l+r)/2;
-		updateK(g,m);
-		Graph g1 = g;
+		// Graph that represents the network flow
+		Graph g(flights.size()*2+4);
+		buildGraph(g,flights,airports,m,X);
 		int flow = 0;
-		if (A == 1) flow = edmondsKarp(g1);
-		else if (A == 2) flow = dinic(g1);
+		if (A == 1) flow = edmondsKarp(g);
+		else if (A == 2) flow = dinic(g);
 		if (flow < m + (int) flights.size()) l = m + 1;
 		else {
 			k = m;
