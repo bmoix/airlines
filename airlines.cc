@@ -52,7 +52,16 @@ void parseArgs(int argc, char *argv[], int& N, int& X, int& A) {
 	if (arg2 == "1") X = 1;
 }
 
-void readFlights(string s, vector<Flight>& flights, MI& airports, int& X) {
+void readFlights(vector<Flight>& flights, MI& airports, int& X) {
+	int o, d, h1, h2, i=0;
+	while (cin >> o >> d >> h1 >> h2) {
+		flights.push_back(Flight(o,d,h1,h2));
+		airports[o].push_back(i++);
+	}
+	if (X == -1) X = flights.size();
+}
+
+void readFlightsFile(string s, vector<Flight>& flights, MI& airports, int& X) {
 	ifstream myfile;
 	myfile.open(s.c_str());
 	int o, d, h1, h2, i=0;
@@ -67,7 +76,7 @@ void readFlights(string s, vector<Flight>& flights, MI& airports, int& X) {
 void buildGraph(Graph& g, vector<Flight>& flights, MI& airports, int k, int X) {
 	g[S].push_back(Edge(s,k,0));
 	g[t].push_back(Edge(T,k,0));
-	g[s].push_back(Edge(t,k,0));
+	//g[s].push_back(Edge(t,k,0));
 	int i = 4;
 	for (Flight f : flights) {
 		g[i].push_back(Edge(i+1,X-1,0));
@@ -357,14 +366,77 @@ int dinic(Graph & g) {
 
 // *** Main ***
 
-int solve(string file, int N, int X, int A) {
+void driverSchedule(Graph& g, vector<bool>& vis, int u) {
+	VI aux;
+	int x = u;
+	while(x != t) {
+		if (not vis[(x-4)/2]) {
+			vis[(x-4)/2] = true;
+			aux.push_back((x-4)/2+1);
+		}
+		for (int j = 0; j < (int)g[x+1].size(); j++) {
+			if (g[x+1][j].flow) {
+				g[x+1][j].flow--;
+				x = g[x+1][j].to;
+				break;
+			}
+		}
+	}
+	for (int i = 0; i < (int)aux.size(); i++) {
+		if (i) cout << " ";
+		cout << aux[i];
+	}
+	cout << endl;
+}
+
+void printSchedule(Graph& g) {
+	vector<bool> visit(((g.size()-4)/2),false);
+	for (auto e : g[s]) {
+		if (e.flow) driverSchedule(g,visit,e.to);
+	}
+}
+
+void solve(int N, int X, int A) {
+	// All the flights with it's info
+	vector<Flight> flights;
+	// Flights of each airport
+	vector<vector<int>> airports(N);
+	readFlights(flights,airports,X);
+
+	// number of pilots to serve all flights
+	int k=0;
+	// Graph that represents the network flow
+	Graph g(flights.size()*2+4);
+	buildGraph(g,flights,airports,k,X);
+	Graph ans;
+	// Binary search to find the minimum k
+	int l = 0, r = flights.size();
+	while (l <= r) {
+		int m = (l+r)/2;
+		updateK(g,m);
+		Graph g1 = g;
+		int flow = 0;
+		if (A == 1) flow = edmondsKarp(g1);
+		else if (A == 2) flow = dinic(g1);
+		if (flow < m + (int) flights.size()) l = m + 1;
+		else {
+			k = m;
+			ans = g1;
+			r = m - 1;
+		}
+	}
+	cout << k << endl;
+	printSchedule(ans);
+}
+
+int solveFile(string file, int N, int X, int A) {
 	string s = "./Benchmark/" + file;
 
 	// All the flights with it's info
 	vector<Flight> flights;
 	// Flights of each airport
 	vector<vector<int>> airports(N);
-	readFlights(s,flights,airports,X);
+	readFlightsFile(s,flights,airports,X);
 
 	// number of pilots to serve all flights
 	int k=0;
@@ -393,7 +465,7 @@ int solve(string file, int N, int X, int A) {
 void instances(int N, int X, int A) {
 		string s;
 		while (cin >> N >> s) {
-			int k = solve(s,N,X,A);
+			int k = solveFile(s,N,X,A);
 			cout << s << " " << k << endl;
 		}
 
@@ -413,7 +485,7 @@ void times(int N, int X, int A) {
 			string s2 = s + convert2.str() + ".air";
 			for (int x = 0; x < 10; x++) {
 				std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-				solve(s2,N,X,A);
+				solveFile(s2,N,X,A);
 				std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
 				auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
 				t += duration;
@@ -434,8 +506,9 @@ int main(int argc, char *argv[]) {
 	int A;
 	parseArgs(argc,argv,N,X,A);
 
+	solve(N,X,A);
 	//instances(N,X,A);
-	times(N,X,A);
+	//times(N,X,A);
 
 	return 0;
 }
