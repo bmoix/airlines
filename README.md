@@ -9,25 +9,25 @@ Jordi Vilaseca Corderroure - jordi.vilaseca.corderroure@est.fib.upc.edu
 
 # Compilar:
 	
-	`make`
+	make
 
 
 # Limpiar el directorio (binarios):
 	
-	`make clean`
+	make clean
 
 
 # Ejecutar:
 	
-	`./airlines <numero de aeropuertos/ciudades> <version> <algoritmo>
+	./airlines <numero de aeropuertos/ciudades> <version> <algoritmo>
 
-		## version:
-			1 = version 1, un unico piloto por trayecto
-			2 = version 2, los pilotos pueden ir como pasajeros
+## version:
+	1 = version 1, un unico piloto por trayecto
+	2 = version 2, los pilotos pueden ir como pasajeros
 
-		## algoritmo:
-			1 = Edmonds-Karp
-			2 = Dinic
+## algoritmo:
+	1 = Edmonds-Karp
+	2 = Dinic
 
 # Archivos adjuntos:
 
