@@ -252,7 +252,8 @@ int dinic(Graph & g) {
 
 // *** Graph building ***
 
-
+// Read from the standard input all the flights,
+// defined as an: origin, destination, departure time, arrival time
 void readFlights(vector<Flight>& flights, MI& airports, int& X) {
 	int o, d, h1, h2, i=0;
 	while (cin >> o >> d >> h1 >> h2) {
@@ -261,6 +262,7 @@ void readFlights(vector<Flight>& flights, MI& airports, int& X) {
 	}
 }
 
+// Builds a graph representing the network flow
 void buildGraph(Graph& g, vector<Flight>& flights, MI& airports, int k, int X) {
 	g[S].push_back(Edge(s,k,0));
 	g[t].push_back(Edge(T,k,0));
@@ -284,6 +286,7 @@ void buildGraph(Graph& g, vector<Flight>& flights, MI& airports, int k, int X) {
 
 // *** Scheduling ***
 
+// Finds all the flights scheduled for a single driver
 void driverSchedule(Graph& g, vector<bool>& vis, int u) {
 	VI aux;
 	int x = u;
@@ -319,12 +322,13 @@ void solve(int N, int X, int A) {
 	vector<Flight> flights;
 	// Flights of each airport
 	vector<vector<int>> airports(N);
+
 	readFlights(flights,airports,X);
 
 	// number of pilots to serve all flights
 	int k=0;
-	
 	Graph ans;
+
 	// Binary search to find the minimum k
 	int l = 0, r = flights.size();
 	while (l <= r) {
