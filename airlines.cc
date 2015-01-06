@@ -48,8 +48,18 @@ void parseArgs(int argc, char *argv[], int& N, int& X, int& A) {
 	std::string arg2 = argv[2];
 	std::string arg3 = argv[3];
 	N = atoi(arg1.c_str());
-	A = atoi(arg3.c_str());
-	if (arg2 == "1") X = 1;
+	if (arg2 == "1") X = 0;
+	else if (arg2 == "2") X = 1;
+	else {
+		cout << "Error: Invalid version" << endl;
+		exit(1);
+	}
+	if (arg3 == "1") A = 1;
+	else if (arg3 == "2") A = 2;
+	else {
+		cout << "Error: Invalid algorithm" << endl;
+		exit(1);
+	}
 }
 
 void readFlights(vector<Flight>& flights, MI& airports, int& X) {
@@ -58,7 +68,6 @@ void readFlights(vector<Flight>& flights, MI& airports, int& X) {
 		flights.push_back(Flight(o,d,h1,h2));
 		airports[o].push_back(i++);
 	}
-	if (X == -1) X = flights.size();
 }
 
 void readFlightsFile(string s, vector<Flight>& flights, MI& airports, int& X) {
@@ -73,6 +82,7 @@ void readFlightsFile(string s, vector<Flight>& flights, MI& airports, int& X) {
 	myfile.close();
 }
 
+/*
 void buildGraph(Graph& g, vector<Flight>& flights, MI& airports, int k, int X) {
 	g[S].push_back(Edge(s,k,0));
 	g[t].push_back(Edge(T,k,0));
@@ -90,6 +100,28 @@ void buildGraph(Graph& g, vector<Flight>& flights, MI& airports, int k, int X) {
 				for (int j = 0; j < X; j++) {
 					g[i+1].push_back(Edge(4+2*a,1,0));
 				}
+			}
+		}
+		i += 2;
+	}
+}
+*/
+
+void buildGraph(Graph& g, vector<Flight>& flights, MI& airports, int k, int X) {
+	g[S].push_back(Edge(s,k,0));
+	g[t].push_back(Edge(T,k,0));
+	int i = 4;
+	for (Flight f : flights) {
+		if (X) g[i].push_back(Edge(i+1,k-1,0));
+		g[i].push_back(Edge(T,1,0));
+		if (X) g[s].push_back(Edge(i,k,0));
+		else g[s].push_back(Edge(i,1,0));
+		g[i+1].push_back(Edge(t,1,0));
+		g[S].push_back(Edge(i+1,1,0));
+		for (auto a : airports[f.dest]) {
+			if (flights[a].dept - f.arr >= 15) {
+				if (X) g[i+1].push_back(Edge(4+2*a,k,0));
+				else g[i+1].push_back(Edge(4+2*a,1,0));
 			}
 		}
 		i += 2;
@@ -418,9 +450,6 @@ int solveFile(string file, int N, int X, int A) {
 
 	// number of pilots to serve all flights
 	int k=0;
-	// Graph that represents the network flow
-	Graph g(flights.size()*2+4);
-	buildGraph(g,flights,airports,k,X);
 	
 	// Binary search to find the minimum k
 	int l = 0, r = flights.size();
@@ -485,9 +514,9 @@ int main(int argc, char *argv[]) {
 	int A;
 	parseArgs(argc,argv,N,X,A);
 
-	solve(N,X,A);
+	//solve(N,X,A);
 	//instances(N,X,A);
-	//times(N,X,A);
+	times(N,X,A);
 
 	return 0;
 }
