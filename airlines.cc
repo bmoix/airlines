@@ -500,8 +500,8 @@ void times(int N, int X, int A) {
 			}
 			//cout << s2 << " " << k << endl;
 		}
-		t /= 10;
-		cout << "N = " << N << " t = " << t << " microseconds" << endl;
+		t /= 100;
+		cout << N << ";" << t << endl;
 	}
 }
 
