@@ -183,7 +183,6 @@ void augment(Graph& r, const VI& path, int bottleneck) {
 	int vAct = T;
 	while (vAct != S) {
 		int vIni = path[vAct];
-		// augment part
 		int p1 = findPosition(r,vAct,vIni);
 		r[vAct][p1].flow += bottleneck;
 		int p2 = findPosition(r,vIni,vAct);
@@ -201,7 +200,7 @@ int findPath(const Graph& r, VI& path) {
 	VI cap(r.size(),0);
 	queue<int> vertexs;
 	vertexs.push(S);
-	cap[S] = 5000000;			// Partial solution, is important to fix it.
+	cap[S] = 5000000;
 	path[S] = -2;
 	while (not vertexs.empty()) {
 		int vIni = vertexs.front();
@@ -246,18 +245,17 @@ void delEdge(Graph& g, int vAct, int vSeg) {
 void delPre(MI & pre, int vAct, int vSeg) {
 	int i = -1;
 	while(++i < (int) pre[vSeg].size() and pre[vSeg][i] != vAct);
-	if(pre[vSeg][++i] == vAct) pre[vSeg].erase(pre[vSeg].begin() + i);
+	if(pre[vSeg][i] == vAct) pre[vSeg].erase(pre[vSeg].begin() + i);
 }
 
 void delInvalid(Graph& g, MI& pre, int vAct, int vSeg) {
 	delEdge(g, vAct, vSeg);
-	delPre(pre, vAct, vSeg);
+	//delPre(pre, vAct, vSeg);
 	if ((int) g[vAct].size() == 0 and vAct != T) {
 		for(int vAnt : pre[vAct]) {
 			delInvalid(g, pre, vAnt, vAct);
 		}
 	}
-
 }
 
 int dinicBfs(Graph& g) {
@@ -270,11 +268,9 @@ int dinicBfs(Graph& g) {
 		int vIni = q.front();
 		q.pop();
 		VI del;
-		// cout << "De " << vIni << " a ";
 		for (int i = (int) g[vIni].size()-1; i >= 0; i--) {
 			Edge e = g[vIni][i];
 			int vAct = e.to;
-			// cout << vAct << " ";
 			if (dis[vAct] == -1) {
 				dis[vAct] = dis[vIni] + 1;
 				pre[vAct].push_back(vIni);
@@ -322,7 +318,6 @@ void removeEdges(Graph& g, const VI& path) {
 	int vAct = T;
 	while (vAct != S) {
 		int vIni = path[vAct];
-		// augment part
 		int i = -1;
 		while (g[vIni][++i].to != vAct);
 		if (g[vIni][i].flow == 0) g[vIni].erase(g[vIni].begin() + i);
