@@ -1,29 +1,29 @@
-N = 2 t = 350321 microseconds
-N = 3 t = 268531 microseconds
-N = 4 t = 217463 microseconds
-N = 5 t = 186580 microseconds
-N = 6 t = 177965 microseconds
-N = 7 t = 171138 microseconds
-N = 8 t = 153577 microseconds
-N = 9 t = 161956 microseconds
-N = 10 t = 157671 microseconds
-N = 11 t = 137049 microseconds
-N = 12 t = 137922 microseconds
-N = 13 t = 140743 microseconds
-N = 14 t = 136987 microseconds
-N = 15 t = 125768 microseconds
-N = 16 t = 119336 microseconds
-N = 17 t = 129864 microseconds
-N = 18 t = 127366 microseconds
-N = 19 t = 120592 microseconds
-N = 20 t = 117203 microseconds
-N = 21 t = 115361 microseconds
-N = 22 t = 109043 microseconds
-N = 23 t = 117758 microseconds
-N = 24 t = 113520 microseconds
-N = 25 t = 108964 microseconds
-N = 26 t = 117200 microseconds
-N = 27 t = 114286 microseconds
-N = 28 t = 112984 microseconds
-N = 29 t = 110801 microseconds
-N = 30 t = 105893 microseconds
+2;8340.382
+3;5523.424
+4;3988.501
+5;3068.350
+6;2638.467
+7;2473.867
+8;2010.222
+9;2108.826
+10;1877.070
+11;1505.934
+12;1475.593
+13;1499.075
+14;1418.093
+15;1205.246
+16;1082.141
+17;1265.044
+18;1142.458
+19;994.618
+20;976.620
+21;926.640
+22;823.295
+23;929.702
+24;831.930
+25;768.717
+26;904.046
+27;830.607
+28;823.977
+29;780.203
+30;724.740
