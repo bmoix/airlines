@@ -238,19 +238,19 @@ int edmondsKarp(Graph & g) {
 
 void delEdge(Graph& g, int vAct, int vSeg) {
 	int i = -1;
-	while (++i < (int) g[vAct].size() and g[vAct][i].to != vSeg);
+	while (++i < (int) g[vAct].size()-1 and g[vAct][i].to != vSeg);
 	if (g[vAct][i].to == vSeg) g[vAct].erase(g[vAct].begin() + i);
 }
 
 void delPre(MI & pre, int vAct, int vSeg) {
 	int i = -1;
-	while(++i < (int) pre[vSeg].size() and pre[vSeg][i] != vAct);
+	while(++i < (int) pre[vSeg].size()-1 and pre[vSeg][i] != vAct);
 	if(pre[vSeg][i] == vAct) pre[vSeg].erase(pre[vSeg].begin() + i);
 }
 
 void delInvalid(Graph& g, MI& pre, int vAct, int vSeg) {
 	delEdge(g, vAct, vSeg);
-	//delPre(pre, vAct, vSeg);
+	delPre(pre, vAct, vSeg);
 	if ((int) g[vAct].size() == 0 and vAct != T) {
 		for(int vAnt : pre[vAct]) {
 			delInvalid(g, pre, vAnt, vAct);
