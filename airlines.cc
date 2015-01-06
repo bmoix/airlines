@@ -125,38 +125,11 @@ void printGraph(Graph& g) {
 	}
 }
 
-// -----------------------------------
-// *** MaxFlow testing utilities ***
-void llegir_entrada(Graph &graf) {
-	int numVer;						// Número de vertex que té el graf
-	cin >> numVer;
-	graf = Graph (numVer);			// Llista d'adjacencia que representa el graf
-
-	int ver1, ver2, capacitat;
-	while (cin >> ver1 >> ver2 >> capacitat) {
-		graf[ver1].push_back(Edge(ver2,capacitat,0));
-	}
-}
-
-void escriure_cami(const VI & cami) {
-	stack<int> aux;
-	int ini = T;
-	while (ini != S) {
-		aux.push(ini);
-		ini = cami[ini];
-	}
-	aux.push(S);
-	while (not aux.empty()) {
-		cout << aux.top() << " ";
-		aux.pop();
-	}
-	cout << endl;
-}
-
 // *** MaxFlow general functions ***
 void buildResidual(const Graph & g, Graph & r) {
 	for (int i = 0; i < (int)g.size(); i++) {
 		for (int j = 0; j < (int)g[i].size(); j++) {
+			// Edges start with all the flow available.
 			r[i].push_back((Edge(g[i][j].to,g[i][j].cap, g[i][j].cap)));
 		}
 	}
@@ -165,6 +138,7 @@ void buildResidual(const Graph & g, Graph & r) {
 void residualToGraph(const Graph & r, Graph & g) {
 	for (int i = 0; i < (int) r.size(); i++) {
 		for (int j = 0; j < (int) r[i].size(); j++) {
+			// If capacity is equal to -1 the edge is not an edge of the genuine graph.
 			if (r[i][j].cap != -1) g[i].push_back((Edge(r[i][j].to,r[i][j].cap, r[i][j].cap - r[i][j].flow)));
 		}
 	}
@@ -229,6 +203,7 @@ int edmondsKarp(Graph & g) {
 		maxflow += bottleneck;
 	}
 	Graph g1(g.size());
+	// Now we create the max flow graph from the residual graph.
 	residualToGraph(r, g1);
 	g = g1;
 	return maxflow;
@@ -238,16 +213,21 @@ int edmondsKarp(Graph & g) {
 
 void delEdge(Graph& g, int vAct, int vSeg) {
 	int i = -1;
+	// It will find the position of vSeg node into the g graph.
 	while (++i < (int) g[vAct].size()-1 and g[vAct][i].to != vSeg);
+	// Now we delete the position.
 	if (g[vAct][i].to == vSeg) g[vAct].erase(g[vAct].begin() + i);
 }
 
 void delPre(MI & pre, int vAct, int vSeg) {
 	int i = -1;
+	// It will find the position of vAct node into the pre matrix.
 	while(++i < (int) pre[vSeg].size()-1 and pre[vSeg][i] != vAct);
+	// Now we delete the position.
 	if(pre[vSeg][i] == vAct) pre[vSeg].erase(pre[vSeg].begin() + i);
 }
 
+//This function is going to delete all invalid edges.
 void delInvalid(Graph& g, MI& pre, int vAct, int vSeg) {
 	delEdge(g, vAct, vSeg);
 	delPre(pre, vAct, vSeg);
@@ -272,12 +252,15 @@ int dinicBfs(Graph& g) {
 			Edge e = g[vIni][i];
 			int vAct = e.to;
 			if (dis[vAct] == -1) {
+				// It's the first time we have arrived to the node
 				dis[vAct] = dis[vIni] + 1;
 				pre[vAct].push_back(vIni);
 				q.push(vAct);
 			} else if (dis[vAct] == dis[vIni] + 1) {
+				// We have arrived to the node again with the minimum distance from initial node.
 				pre[vAct].push_back(vIni);
 			} else {
+				// We have arrived to the node again, and the distance is not the minimum.
 				g[vIni].erase(g[vIni].begin() + i);
 			}
 		}
@@ -305,6 +288,7 @@ bool dinicDfs(Graph& g, VI& path, VI& bott, int v) {
 	return trobat;
 }
 
+// This function makes a copy of the g graph, the result doesn't have any edge with flow 0.
 void copyGraph(const Graph& g, Graph& aux) {
 	for (int i = 0; i < (int) g.size();i++) {
 		for (int j = 0; j < (int) g[i].size(); j++) {
@@ -314,6 +298,7 @@ void copyGraph(const Graph& g, Graph& aux) {
 	}
 }
 
+//This function will delete all edges from tha path that have flow 0.
 void removeEdges(Graph& g, const VI& path) {
 	int vAct = T;
 	while (vAct != S) {
