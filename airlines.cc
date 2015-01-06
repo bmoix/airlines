@@ -3,11 +3,6 @@
 #include <queue>
 #include <stack>
 
-#include <string>
-#include <sstream>
-#include <fstream>
-#include <chrono>
-
 using namespace std;
 
 // *** Data structures ***
@@ -29,135 +24,16 @@ struct Edge {
 typedef vector<int> VI;
 typedef vector<VI> MI;
 typedef vector<vector<Edge>> Graph;
-typedef vector< vector <pair<int,int> > > IImat;		// Següent node, capacitat aresta.
-typedef vector< pair<int,int> > IIvec;					// Següent node, capacitat aresta.
+
 
 // *** Global variables ***
 
 // source (supply k), sink (demmand k), Super Source, Super Sink
 const int s=2, t=3, S=0, T=1;
 
-// *** Graph building ***
-
-void parseArgs(int argc, char *argv[], int& N, int& X, int& A) {
-	if (argc != 4) {
-		cout << "Usage: airlines <airports> <version> <algorithm>" << endl;
-		exit(1);
-	}
-	std::string arg1 = argv[1];
-	std::string arg2 = argv[2];
-	std::string arg3 = argv[3];
-	N = atoi(arg1.c_str());
-	if (arg2 == "1") X = 0;
-	else if (arg2 == "2") X = 1;
-	else {
-		cout << "Error: Invalid version" << endl;
-		exit(1);
-	}
-	if (arg3 == "1") A = 1;
-	else if (arg3 == "2") A = 2;
-	else {
-		cout << "Error: Invalid algorithm" << endl;
-		exit(1);
-	}
-}
-
-void readFlights(vector<Flight>& flights, MI& airports, int& X) {
-	int o, d, h1, h2, i=0;
-	while (cin >> o >> d >> h1 >> h2) {
-		flights.push_back(Flight(o,d,h1,h2));
-		airports[o].push_back(i++);
-	}
-}
-
-void readFlightsFile(string s, vector<Flight>& flights, MI& airports, int& X) {
-	ifstream myfile;
-	myfile.open(s.c_str());
-	int o, d, h1, h2, i=0;
-	while (myfile >> o >> d >> h1 >> h2) {
-		flights.push_back(Flight(o,d,h1,h2));
-		airports[o].push_back(i++);
-	}
-	if (X == -1) X = flights.size();
-	myfile.close();
-}
-
-/*
-void buildGraph(Graph& g, vector<Flight>& flights, MI& airports, int k, int X) {
-	g[S].push_back(Edge(s,k,0));
-	g[t].push_back(Edge(T,k,0));
-	int i = 4;
-	for (Flight f : flights) {
-		g[i].push_back(Edge(T,1,0));
-		g[i+1].push_back(Edge(t,1,0));
-		g[S].push_back(Edge(i+1,1,0));
-		for (int j = 0; j < X; j++) {
-			if (j) g[i].push_back(Edge(i+1,1,0));
-			g[s].push_back(Edge(i,1,0));
-		}
-		for (auto a : airports[f.dest]) {
-			if (flights[a].dept - f.arr >= 15) {
-				for (int j = 0; j < X; j++) {
-					g[i+1].push_back(Edge(4+2*a,1,0));
-				}
-			}
-		}
-		i += 2;
-	}
-}
-*/
-
-void buildGraph(Graph& g, vector<Flight>& flights, MI& airports, int k, int X) {
-	g[S].push_back(Edge(s,k,0));
-	g[t].push_back(Edge(T,k,0));
-	int i = 4;
-	for (Flight f : flights) {
-		if (X) g[i].push_back(Edge(i+1,k-1,0));
-		g[i].push_back(Edge(T,1,0));
-		if (X) g[s].push_back(Edge(i,k,0));
-		else g[s].push_back(Edge(i,1,0));
-		g[i+1].push_back(Edge(t,1,0));
-		g[S].push_back(Edge(i+1,1,0));
-		for (auto a : airports[f.dest]) {
-			if (flights[a].dept - f.arr >= 15) {
-				if (X) g[i+1].push_back(Edge(4+2*a,k,0));
-				else g[i+1].push_back(Edge(4+2*a,1,0));
-			}
-		}
-		i += 2;
-	}
-}
-
-void printGraph(Graph& g) {
-	//cout << "N: " << N << endl;
-	//cout << "X: " << X << endl;
-	//cout << "Flights: " << flights.size() << endl;
-	//cout << "Airports: " << airports.size() << endl;
-	cout << "Super Source " << S << endl;
-	for (auto x : g[S]) {
-		cout << "\tTo " << x.to << " c " << x.cap << " f " << x.flow << endl;
-	}
-	cout << "Super Sink " << T << endl;
-	for (auto x : g[T]) {
-		cout << "\tTo " << x.to << " c " << x.cap << " f " << x.flow << endl;
-	}
-	cout << "Source " << s << endl;
-	for (auto x : g[s]) {
-		cout << "\tTo " << x.to << " c " << x.cap << " f " << x.flow << endl;
-	}
-	cout << "Sink " << t << endl;
-	for (auto x : g[t]) {
-		cout << "\tTo " << x.to << " c " << x.cap << " f " << x.flow << endl;
-	}
-	for (int i = 4; i < (int)g.size(); i++) {
-		cout << "Node " << i << endl;
-		for (auto x : g[i]) {
-			cout << "\tTo " << x.to << " c " << x.cap << " f " << x.flow << endl;
-		}
-	}
-}
 
 // *** MaxFlow general functions ***
+
 void buildResidual(const Graph & g, Graph & r) {
 	for (int i = 0; i < (int)g.size(); i++) {
 		for (int j = 0; j < (int)g[i].size(); j++) {
@@ -373,7 +249,40 @@ int dinic(Graph & g) {
 	return maxflow;
 }
 
-// *** Main ***
+
+// *** Graph building ***
+
+
+void readFlights(vector<Flight>& flights, MI& airports, int& X) {
+	int o, d, h1, h2, i=0;
+	while (cin >> o >> d >> h1 >> h2) {
+		flights.push_back(Flight(o,d,h1,h2));
+		airports[o].push_back(i++);
+	}
+}
+
+void buildGraph(Graph& g, vector<Flight>& flights, MI& airports, int k, int X) {
+	g[S].push_back(Edge(s,k,0));
+	g[t].push_back(Edge(T,k,0));
+	int i = 4;
+	for (Flight f : flights) {
+		if (X) g[i].push_back(Edge(i+1,k-1,0));
+		g[i].push_back(Edge(T,1,0));
+		if (X) g[s].push_back(Edge(i,k,0));
+		else g[s].push_back(Edge(i,1,0));
+		g[i+1].push_back(Edge(t,1,0));
+		g[S].push_back(Edge(i+1,1,0));
+		for (auto a : airports[f.dest]) {
+			if (flights[a].dept - f.arr >= 15) {
+				if (X) g[i+1].push_back(Edge(4+2*a,k,0));
+				else g[i+1].push_back(Edge(4+2*a,1,0));
+			}
+		}
+		i += 2;
+	}
+}
+
+// *** Scheduling ***
 
 void driverSchedule(Graph& g, vector<bool>& vis, int u) {
 	VI aux;
@@ -439,84 +348,42 @@ void solve(int N, int X, int A) {
 	printSchedule(ans);
 }
 
-int solveFile(string file, int N, int X, int A) {
-	string s = "./Benchmark/" + file;
+// *** Main ***
 
-	// All the flights with it's info
-	vector<Flight> flights;
-	// Flights of each airport
-	vector<vector<int>> airports(N);
-	readFlightsFile(s,flights,airports,X);
-
-	// number of pilots to serve all flights
-	int k=0;
-	
-	// Binary search to find the minimum k
-	int l = 0, r = flights.size();
-	while (l <= r) {
-		int m = (l+r)/2;
-		// Graph that represents the network flow
-		Graph g(flights.size()*2+4);
-		buildGraph(g,flights,airports,m,X);
-		int flow = 0;
-		if (A == 1) flow = edmondsKarp(g);
-		else if (A == 2) flow = dinic(g);
-		if (flow < m + (int) flights.size()) l = m + 1;
-		else {
-			k = m;
-			r = m - 1;
-		}
+void parseArgs(int argc, char *argv[], int& N, int& X, int& A) {
+	if (argc != 4) {
+		cout << "Usage: airlines <airports> <version> <algorithm>" << endl;
+		exit(1);
 	}
-	return k;
-}
-
-void instances(int N, int X, int A) {
-		string s;
-		while (cin >> N >> s) {
-			int k = solveFile(s,N,X,A);
-			cout << s << " " << k << endl;
-		}
-
-}
-
-void times(int N, int X, int A) {
-	for (int i = 2; i <= 30; i++) {
-		N = i;
-		ostringstream convert;
-		convert << i;
-		string s = "instance_100_" + convert.str() + "_";
-
-		auto t = 0;
-		for (int j = 1; j <= 10; j++) {
-			ostringstream convert2;
-			convert2 << j;
-			string s2 = s + convert2.str() + ".air";
-			for (int x = 0; x < 10; x++) {
-				std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
-				solveFile(s2,N,X,A);
-				std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
-				auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
-				t += duration;
-			}
-			//cout << s2 << " " << k << endl;
-		}
-		t /= 100;
-		cout << N << ";" << t << endl;
+	std::string arg1 = argv[1];
+	std::string arg2 = argv[2];
+	std::string arg3 = argv[3];
+	N = atoi(arg1.c_str());
+	if (arg2 == "1") X = 0;
+	else if (arg2 == "2") X = 1;
+	else {
+		cout << "Error: Invalid version" << endl;
+		exit(1);
+	}
+	if (arg3 == "1") A = 1;
+	else if (arg3 == "2") A = 2;
+	else {
+		cout << "Error: Invalid algorithm" << endl;
+		exit(1);
 	}
 }
 
 int main(int argc, char *argv[]) {
 	// X defines the capacity of the edges in the different versions
-	int X = -1;
+	int X = 0;
 	// Number of airports
 	int N;
 	// Algorithm to be used
-	int A;
+	int A = 1;
+
 	parseArgs(argc,argv,N,X,A);
 
-	//solve(N,X,A);
-	//instances(N,X,A);
-	times(N,X,A);
+	solve(N,X,A);
 
 	return 0;
 }
